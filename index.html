@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Camper Budgeter</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div>
+        <h1>Camper Budgeter</h1>
+        <p>Gestione spese viaggio per 2 famiglie</p>
+      </div>
+    </header>
+
+    <section class="cards">
+      <div class="card">
+        <h2>Totali</h2>
+        <div class="totals">
+          <div><span>Totale spese</span><strong id="totalExpenses">€ 0,00</strong></div>
+          <div><span>Da dividere</span><strong id="sharedExpenses">€ 0,00</strong></div>
+          <div><span>Quota per famiglia</span><strong id="quotaPerFamily">€ 0,00</strong></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Saldo famiglie</h2>
+        <div class="totals">
+          <div><span id="family1NameLabel">Famiglia 1</span><strong id="family1Balance">€ 0,00</strong></div>
+          <div><span id="family2NameLabel">Famiglia 2</span><strong id="family2Balance">€ 0,00</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Nuovo utente</h2>
+        <form id="userForm" class="form">
+          <input id="userName" type="text" placeholder="Nome utente" required />
+          <select id="userFamily" required>
+            <option value="family1">Famiglia 1</option>
+            <option value="family2">Famiglia 2</option>
+          </select>
+          <button type="submit">Aggiungi utente</button>
+        </form>
+        <ul id="userList" class="list"></ul>
+      </div>
+
+      <div class="card">
+        <h2>Nuova spesa</h2>
+        <form id="expenseForm" class="form">
+          <input id="expenseAmount" type="number" step="0.01" min="0" placeholder="Importo (€)" required />
+          <input id="expenseDescription" type="text" placeholder="Descrizione" />
+          <select id="expensePaidBy" required></select>
+          <label class="checkbox">
+            <input id="expenseShared" type="checkbox" checked />
+            DA DIVIDERE tra le due famiglie
+          </label>
+          <button type="submit">Salva spesa</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Grafico spese</h2>
+        <canvas id="expensesChart"></canvas>
+      </div>
+      <div class="card">
+        <h2>Grafico famiglie</h2>
+        <canvas id="familiesChart"></canvas>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Spese registrate</h2>
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Descrizione</th>
+              <th>Importo</th>
+              <th>Pagato da</th>
+              <th>Famiglia</th>
+              <th>Da dividere</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody id="expensesTable"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
