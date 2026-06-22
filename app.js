@@ -5,8 +5,7 @@ import {
   push,
   set,
   onValue,
-  remove,
-  update
+  remove
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
 const firebaseConfig = {
@@ -23,21 +22,29 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const families = {
-  family1: { name: "Famiglia 1" },
-  family2: { name: "Famiglia 2" }
+  family1: { name: "Barella" },
+  family2: { name: "Sforzelli" }
 };
 
 const els = {
+  // Utenti
+  openUserPanelBtn: document.getElementById("openUserPanelBtn"),
+  closeUserPanelBtn: document.getElementById("closeUserPanelBtn"),
+  userPanelCard: document.getElementById("userPanelCard"),
   userForm: document.getElementById("userForm"),
   userName: document.getElementById("userName"),
   userFamily: document.getElementById("userFamily"),
   userList: document.getElementById("userList"),
+
+  // Spese
   expenseForm: document.getElementById("expenseForm"),
   expenseAmount: document.getElementById("expenseAmount"),
   expenseDescription: document.getElementById("expenseDescription"),
   expensePaidBy: document.getElementById("expensePaidBy"),
   expenseShared: document.getElementById("expenseShared"),
   expensesTable: document.getElementById("expensesTable"),
+
+  // Totali
   totalExpenses: document.getElementById("totalExpenses"),
   sharedExpenses: document.getElementById("sharedExpenses"),
   quotaPerFamily: document.getElementById("quotaPerFamily"),
@@ -49,6 +56,17 @@ const els = {
 
 els.family1NameLabel.textContent = families.family1.name;
 els.family2NameLabel.textContent = families.family2.name;
+
+// Pannello utente: aperto/chiuso
+els.openUserPanelBtn.addEventListener("click", () => {
+  els.userPanelCard.style.display = "block";
+  els.openUserPanelBtn.style.display = "none";
+});
+
+els.closeUserPanelBtn.addEventListener("click", () => {
+  els.userPanelCard.style.display = "none";
+  els.openUserPanelBtn.style.display = "block";
+});
 
 let users = {};
 let expenses = {};
@@ -98,6 +116,7 @@ function renderExpenses() {
       `;
     }).join("");
   els.expensesTable.innerHTML = rows || `<tr><td colspan="7">Nessuna spesa inserita.</td></tr>`;
+
   document.querySelectorAll("[data-delete]").forEach(btn => {
     btn.addEventListener("click", () => remove(ref(db, `expenses/${btn.dataset.delete}`)));
   });
@@ -182,9 +201,19 @@ els.userForm.addEventListener("submit", async (e) => {
   const name = els.userName.value.trim();
   const familyId = els.userFamily.value;
   if (!name) return;
-  const newUser = push(ref(db, "users"));
-  await set(newUser, { name, familyId });
-  els.userName.value = "";
+
+  try {
+    const newUserRef = push(ref(db, "users"));
+    await set(newUserRef, {
+      name,
+      familyId
+    });
+
+    els.userName.value = "";
+  } catch (err) {
+    console.error("Errore durante la creazione utente:", err);
+    alert("Errore durante la creazione dell'utente. Controlla: config Firebase, regole database e connettività.");
+  }
 });
 
 els.expenseForm.addEventListener("submit", async (e) => {
@@ -196,18 +225,23 @@ els.expenseForm.addEventListener("submit", async (e) => {
 
   if (!amount || !paidBy) return;
 
-  const newExpense = push(ref(db, "expenses"));
-  await set(newExpense, {
-    amount,
-    description,
-    paidBy,
-    splitBetweenFamilies,
-    date: Date.now()
-  });
+  try {
+    const newExpenseRef = push(ref(db, "expenses"));
+    await set(newExpenseRef, {
+      amount,
+      description,
+      paidBy,
+      splitBetweenFamilies,
+      date: Date.now()
+    });
 
-  els.expenseAmount.value = "";
-  els.expenseDescription.value = "";
-  els.expenseShared.checked = true;
+    els.expenseAmount.value = "";
+    els.expenseDescription.value = "";
+    els.expenseShared.checked = true;
+  } catch (err) {
+    console.error("Errore durante la creazione spesa:", err);
+    alert("Errore durante la creazione della spesa. Controlla: config Firebase, regole database e connettività.");
+  }
 });
 
 onValue(ref(db, "users"), (snap) => {
