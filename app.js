@@ -10,13 +10,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_FIREBASE_API_KEY",
-  authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
-  databaseURL: "YOUR_FIREBASE_DATABASE_URL",
-  projectId: "YOUR_FIREBASE_PROJECT_ID",
-  storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_FIREBASE_MESSAGING_SENDER_ID",
-  appId: "YOUR_FIREBASE_APP_ID"
+  apiKey: "AIzaSyDIMfn30rD3EHlrQFQx6Yko_Vrimx-jAws",
+  authDomain: "budgeter-75f51.firebaseapp.com",
+  projectId: "budgeter-75f51",
+  storageBucket: "budgeter-75f51.firebasestorage.app",
+  messagingSenderId: "1089429460683",
+  appId: "1:1089429460683:web:709f3443e46441e9b8ed4e",
+  measurementId: "G-SEH6X65GQ6"
 };
 
 const app = initializeApp(firebaseConfig);
