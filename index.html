@@ -1,109 +1,331 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Camper Budgeter</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budgeter</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        :root {
+            --gold: #D4AF37;
+            --dark: #2C1F1F;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.85)), 
+                        url('https://thumbs.dreamstime.com/b/dark-ship-deck-12737641.jpg') center/cover fixed;
+            color: #fff;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: rgba(44, 31, 31, 0.95);
+            border: 6px solid var(--gold);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(#3C2F2F, #2C1F1F);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 5px solid var(--gold);
+        }
+
+        h1 { font-size: 2.8rem; color: var(--gold); text-shadow: 3px 3px 0 #000; }
+
+        .main { display: flex; flex-wrap: wrap; gap: 15px; padding: 15px; }
+
+        .sidebar, .dashboard {
+            background: rgba(60, 47, 47, 0.8);
+            padding: 15px;
+            border: 3px solid var(--gold);
+            border-radius: 8px;
+        }
+
+        .sidebar { flex: 1; min-width: 320px; }
+        .content { flex: 2; min-width: 300px; }
+
+        input, select, button {
+            font-family: inherit;
+            padding: 10px;
+            margin: 6px 0;
+            border: 2px solid var(--gold);
+            background: #fff;
+            color: #000;
+            width: 100%;
+        }
+
+        button {
+            background: var(--gold);
+            color: #000;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover { background: #b8860b; }
+
+        .expense-list {
+            max-height: 65vh;
+            overflow-y: auto;
+        }
+
+        .expense-item {
+            background: rgba(245, 232, 199, 0.9);
+            color: #222;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border: 2px solid #3C2F2F;
+        }
+
+        .total {
+            font-size: 1.4rem;
+            color: var(--gold);
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .delete-btn { color: #c00; background: none; border: none; float: right; font-size: 1.3rem; cursor: pointer; }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <header class="topbar">
-      <div>
-        <h1>Camper Budgeter</h1>
-        <p>Gestione spese viaggio per 2 famiglie</p>
-      </div>
-    </header>
+    <div class="container">
+        <header>
+            <h1>BUDGETER</h1>
+            <p>Gestione Spese Familiari • Barella & Sforzelli</p>
+        </header>
 
-    <section class="cards">
-      <div class="card">
-        <h2>Totali</h2>
-        <div class="totals">
-          <div><span>Totale spese</span><strong id="totalExpenses">€ 0,00</strong></div>
-          <div><span>Da dividere</span><strong id="sharedExpenses">€ 0,00</strong></div>
-          <div><span>Quota per famiglia</span><strong id="quotaPerFamily">€ 0,00</strong></div>
+        <div class="main">
+            <!-- Sidebar: Aggiungi Spesa -->
+            <div class="sidebar">
+                <h2 style="color:var(--gold); margin-bottom:15px;">➕ Nuova Spesa</h2>
+                
+                <input type="date" id="date" value="">
+                <input type="text" id="description" placeholder="Descrizione spesa">
+                <input type="number" id="amount" placeholder="Importo €" step="0.01">
+                
+                <select id="person">
+                    <option value="Livio">Livio</option>
+                    <option value="Irene">Irene</option>
+                    <option value="Vale">Vale</option>
+                    <option value="Lisa">Lisa</option>
+                </select>
+
+                <label style="color:#ddd; display:block; margin:10px 0 5px;">
+                    <input type="checkbox" id="toSplit"> DA DIVIDERE tra le due famiglie
+                </label>
+
+                <button onclick="addExpense()">Aggiungi Spesa</button>
+            </div>
+
+            <!-- Dashboard & Lista -->
+            <div class="content">
+                <div class="dashboard">
+                    <div class="total" id="total-all">Totale: 0.00 €</div>
+                    <div style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:10px; margin:15px 0;">
+                        <div>Barella: <span id="barella-total" style="color:#4CAF50;">0.00 €</span></div>
+                        <div>Sforzelli: <span id="sforzelli-total" style="color:#4CAF50;">0.00 €</span></div>
+                    </div>
+                </div>
+
+                <div class="filter-bar">
+                    <select id="filter-person" onchange="renderExpenses()">
+                        <option value="">Tutti</option>
+                        <option value="Livio">Livio</option>
+                        <option value="Irene">Irene</option>
+                        <option value="Vale">Vale</option>
+                        <option value="Lisa">Lisa</option>
+                    </select>
+                    <select id="filter-split" onchange="renderExpenses()">
+                        <option value="">Tutte le spese</option>
+                        <option value="split">Solo da dividere</option>
+                        <option value="nosplit">Solo personali</option>
+                    </select>
+                    <button onclick="clearFilters()">Reset Filtri</button>
+                </div>
+
+                <div id="expenses-list" class="expense-list"></div>
+            </div>
         </div>
-      </div>
+    </div>
 
-      <div class="card">
-        <h2>Saldo famiglie</h2>
-        <div class="totals">
-          <div><span id="family1NameLabel">Famiglia 1</span><strong id="family1Balance">€ 0,00</strong></div>
-          <div><span id="family2NameLabel">Famiglia 2</span><strong id="family2Balance">€ 0,00</strong></div>
-        </div>
-      </div>
-    </section>
+    <script>
+        // ==================== FIREBASE ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDIMfn30rD3EHlrQFQx6Yko_Vrimx-jAws",
+            authDomain: "budgeter-75f51.firebaseapp.com",
+            projectId: "budgeter-75f51",
+            storageBucket: "budgeter-75f51.firebasestorage.app",
+            messagingSenderId: "1089429460683",
+            appId: "1:1089429460683:web:709f3443e46441e9b8ed4e"
+        };
 
-    <section class="grid">
-      <!-- Nuova spesa (sempre visibile) -->
-      <div class="card">
-        <h2>Nuova spesa</h2>
-        <form id="expenseForm" class="form">
-          <input id="expenseAmount" type="number" step="0.01" min="0" placeholder="Importo (€)" required />
-          <input id="expenseDescription" type="text" placeholder="Descrizione" />
-          <select id="expensePaidBy" required></select>
-          <label class="checkbox">
-            <input id="expenseShared" type="checkbox" checked />
-            DA DIVIDERE tra le due famiglie
-          </label>
-          <button type="submit">Salva spesa</button>
-        </form>
-      </div>
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const expensesRef = db.ref('expenses');
 
-      <!-- Pannello utente nascosto -->
-      <div class="card" id="userPanelCard" style="display:none;">
-        <h2>Aggiungi utente</h2>
-        <form id="userForm" class="form">
-          <input id="userName" type="text" placeholder="Nome utente" required />
-          <select id="userFamily" required>
-            <option value="family1">Famiglia 1</option>
-            <option value="family2">Famiglia 2</option>
-          </select>
-          <button type="submit">Aggiungi utente</button>
-        </form>
-        <ul id="userList" class="list"></ul>
-        <button id="closeUserPanelBtn" style="margin-top:10px;background:#374151;">Chiudi</button>
-      </div>
-    </section>
+        let expenses = [];
 
-    <!-- Link discreto per aprire il pannello utente -->
-    <button id="openUserPanelBtn" style="margin-top:10px;background:#1f2937;color:#9ca3af;padding:8px 12px;border-radius:8px;border:1px solid #374151;cursor:pointer;">
-      + Aggiungi utente
-    </button>
+        // Famiglie
+        const familyMap = {
+            "Livio": "Barella",
+            "Irene": "Barella",
+            "Vale": "Sforzelli",
+            "Lisa": "Sforzelli"
+        };
 
-    <section class="grid">
-      <div class="card">
-        <h2>Grafico spese</h2>
-        <canvas id="expensesChart"></canvas>
-      </div>
-      <div class="card">
-        <h2>Grafico famiglie</h2>
-        <canvas id="familiesChart"></canvas>
-      </div>
-    </section>
+        expensesRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            expenses = data ? Object.values(data) : [];
+            expenses.sort((a,b) => b.date.localeCompare(a.date));
+            renderAll();
+        });
 
-    <section class="card">
-      <h2>Spese registrate</h2>
-      <div class="tableWrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Descrizione</th>
-              <th>Importo</th>
-              <th>Pagato da</th>
-              <th>Famiglia</th>
-              <th>Da dividere</th>
-              <th>Azioni</th>
-            </tr>
-          </thead>
-          <tbody id="expensesTable"></tbody>
-        </table>
-      </div>
-    </section>
-  </div>
+        function saveExpenses() {
+            const obj = {};
+            expenses.forEach(exp => obj[exp.id] = exp);
+            expensesRef.set(obj);
+        }
 
-  <script type="module" src="app.js"></script>
+        function addExpense() {
+            const description = document.getElementById('description').value.trim();
+            const amount = parseFloat(document.getElementById('amount').value);
+            const person = document.getElementById('person').value;
+            const date = document.getElementById('date').value;
+            const toSplit = document.getElementById('toSplit').checked;
+
+            if (!description || !amount || !date) {
+                alert("Compila tutti i campi obbligatori!");
+                return;
+            }
+
+            const newExpense = {
+                id: Date.now().toString(),
+                date: date,
+                description: description,
+                amount: amount,
+                person: person,
+                toSplit: toSplit
+            };
+
+            expenses.unshift(newExpense);
+            saveExpenses();
+
+            // Reset form
+            document.getElementById('description').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('toSplit').checked = false;
+        }
+
+        function renderAll() {
+            renderExpenses();
+            renderTotals();
+        }
+
+        function renderTotals() {
+            let total = 0;
+            let barella = 0;
+            let sforzelli = 0;
+
+            expenses.forEach(exp => {
+                total += exp.amount;
+                if (exp.toSplit) {
+                    // Diviso a metà tra le due famiglie
+                    const half = exp.amount / 2;
+                    barella += half;
+                    sforzelli += half;
+                } else {
+                    if (familyMap[exp.person] === "Barella") barella += exp.amount;
+                    else sforzelli += exp.amount;
+                }
+            });
+
+            document.getElementById('total-all').textContent = `Totale: ${total.toFixed(2)} €`;
+            document.getElementById('barella-total').textContent = `${barella.toFixed(2)} €`;
+            document.getElementById('sforzelli-total').textContent = `${sforzelli.toFixed(2)} €`;
+        }
+
+        function renderExpenses() {
+            const container = document.getElementById('expenses-list');
+            const personFilter = document.getElementById('filter-person').value;
+            const splitFilter = document.getElementById('filter-split').value;
+
+            let filtered = expenses;
+
+            if (personFilter) {
+                filtered = filtered.filter(exp => exp.person === personFilter);
+            }
+
+            if (splitFilter === "split") {
+                filtered = filtered.filter(exp => exp.toSplit);
+            } else if (splitFilter === "nosplit") {
+                filtered = filtered.filter(exp => !exp.toSplit);
+            }
+
+            container.innerHTML = filtered.map(exp => `
+                <div class="expense-item">
+                    <strong>${exp.date} - ${exp.person}</strong><br>
+                    ${exp.description}<br>
+                    <strong>${exp.amount.toFixed(2)} €</strong>
+                    ${exp.toSplit ? '<span style="color:#c00;"> [DA DIVIDERE]</span>' : ''}
+                    <button class="delete-btn" onclick="deleteExpense('${exp.id}')">✕</button>
+                    <button onclick="editExpense('${exp.id}')" style="float:right; margin-right:10px;">✏️</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteExpense(id) {
+            if (!confirm("Eliminare questa spesa?")) return;
+            expenses = expenses.filter(exp => exp.id !== id);
+            saveExpenses();
+        }
+
+        let editingId = null;
+
+        function editExpense(id) {
+            const exp = expenses.find(e => e.id === id);
+            if (!exp) return;
+
+            editingId = id;
+            document.getElementById('date').value = exp.date;
+            document.getElementById('description').value = exp.description;
+            document.getElementById('amount').value = exp.amount;
+            document.getElementById('person').value = exp.person;
+            document.getElementById('toSplit').checked = exp.toSplit;
+
+            alert("Modifica i campi e premi 'Aggiungi Spesa' per salvare le modifiche.");
+        }
+
+        function clearFilters() {
+            document.getElementById('filter-person').value = '';
+            document.getElementById('filter-split').value = '';
+            renderExpenses();
+        }
+
+        // Imposta data odierna
+        document.getElementById('date').valueAsDate = new Date();
+
+        // Inizializzazione
+        window.onload = () => {
+            renderAll();
+        };
+    </script>
 </body>
 </html>
