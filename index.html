@@ -22,7 +22,8 @@
                         url('https://thumbs.dreamstime.com/b/dark-ship-deck-12737641.jpg') center/cover fixed;
             color: #fff;
             min-height: 100vh;
-            padding: 10px;
+            padding: 8px;
+            font-size: 14px;
         }
 
         .container {
@@ -36,33 +37,40 @@
 
         header {
             background: linear-gradient(#3C2F2F, #2C1F1F);
-            padding: 20px;
+            padding: 18px 12px;
             text-align: center;
             border-bottom: 5px solid var(--gold);
         }
 
-        h1 { font-size: 2.8rem; color: var(--gold); text-shadow: 3px 3px 0 #000; }
+        h1 { 
+            font-size: 2.4rem; 
+            color: var(--gold); 
+            text-shadow: 3px 3px 0 #000; 
+        }
 
-        .main { display: flex; flex-wrap: wrap; gap: 15px; padding: 15px; }
+        .main { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            padding: 12px; 
+        }
 
-        .sidebar, .dashboard {
-            background: rgba(60, 47, 47, 0.8);
+        .sidebar, .content {
+            background: rgba(60, 47, 47, 0.85);
             padding: 15px;
             border: 3px solid var(--gold);
             border-radius: 8px;
         }
 
-        .sidebar { flex: 1; min-width: 320px; }
-        .content { flex: 2; min-width: 300px; }
-
         input, select, button {
             font-family: inherit;
-            padding: 10px;
-            margin: 6px 0;
+            padding: 12px;
+            margin: 8px 0;
             border: 2px solid var(--gold);
             background: #fff;
             color: #000;
             width: 100%;
+            border-radius: 4px;
         }
 
         button {
@@ -70,54 +78,88 @@
             color: #000;
             cursor: pointer;
             font-weight: bold;
+            padding: 14px;
         }
 
         button:hover { background: #b8860b; }
 
-        .expense-list {
-            max-height: 65vh;
-            overflow-y: auto;
+        .expense-item {
+            background: rgba(245, 232, 199, 0.92);
+            color: #222;
+            padding: 14px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 2px solid #3C2F2F;
+            position: relative;
         }
 
-        .expense-item {
-            background: rgba(245, 232, 199, 0.9);
-            color: #222;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 6px;
-            border: 2px solid #3C2F2F;
+        .expense-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
         }
+
+        .expense-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-small {
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            flex: 1;
+        }
+
+        .btn-edit { background: #4CAF50; color: white; }
+        .btn-delete { background: #c00; color: white; }
 
         .total {
-            font-size: 1.4rem;
+            font-size: 1.35rem;
             color: var(--gold);
             text-align: center;
-            margin: 15px 0;
+            margin: 12px 0;
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 6px;
         }
 
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
-        .delete-btn { color: #c00; background: none; border: none; float: right; font-size: 1.3rem; cursor: pointer; }
+        .filter-bar select, .filter-bar button {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        @media (min-width: 768px) {
+            .main {
+                flex-direction: row;
+            }
+            .sidebar { 
+                max-width: 380px; 
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>BUDGETER</h1>
-            <p>Gestione Spese Familiari • Barella & Sforzelli</p>
+            <p>Spese Familiari • Barella & Sforzelli</p>
         </header>
 
         <div class="main">
-            <!-- Sidebar: Aggiungi Spesa -->
+            <!-- Sidebar Nuova Spesa -->
             <div class="sidebar">
-                <h2 style="color:var(--gold); margin-bottom:15px;">➕ Nuova Spesa</h2>
+                <h2 style="color:var(--gold); margin-bottom:12px;">➕ Nuova Spesa</h2>
                 
-                <input type="date" id="date" value="">
+                <input type="date" id="date">
                 <input type="text" id="description" placeholder="Descrizione spesa">
                 <input type="number" id="amount" placeholder="Importo €" step="0.01">
                 
@@ -128,21 +170,20 @@
                     <option value="Lisa">Lisa</option>
                 </select>
 
-                <label style="color:#ddd; display:block; margin:10px 0 5px;">
+                <label style="color:#ddd; display:block; margin:10px 0 8px;">
                     <input type="checkbox" id="toSplit"> DA DIVIDERE tra le due famiglie
                 </label>
 
                 <button onclick="addExpense()">Aggiungi Spesa</button>
             </div>
 
-            <!-- Dashboard & Lista -->
+            <!-- Lista Spese -->
             <div class="content">
-                <div class="dashboard">
-                    <div class="total" id="total-all">Totale: 0.00 €</div>
-                    <div style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:10px; margin:15px 0;">
-                        <div>Barella: <span id="barella-total" style="color:#4CAF50;">0.00 €</span></div>
-                        <div>Sforzelli: <span id="sforzelli-total" style="color:#4CAF50;">0.00 €</span></div>
-                    </div>
+                <div class="total" id="total-all">Totale: 0.00 €</div>
+                
+                <div style="display:flex; justify-content:space-around; margin:12px 0; font-size:0.95rem;">
+                    <div>Barella: <span id="barella-total" style="color:#4CAF50;">0.00 €</span></div>
+                    <div>Sforzelli: <span id="sforzelli-total" style="color:#4CAF50;">0.00 €</span></div>
                 </div>
 
                 <div class="filter-bar">
@@ -154,14 +195,14 @@
                         <option value="Lisa">Lisa</option>
                     </select>
                     <select id="filter-split" onchange="renderExpenses()">
-                        <option value="">Tutte le spese</option>
-                        <option value="split">Solo da dividere</option>
-                        <option value="nosplit">Solo personali</option>
+                        <option value="">Tutte</option>
+                        <option value="split">Da Dividere</option>
+                        <option value="nosplit">Personali</option>
                     </select>
-                    <button onclick="clearFilters()">Reset Filtri</button>
+                    <button onclick="clearFilters()">Reset</button>
                 </div>
 
-                <div id="expenses-list" class="expense-list"></div>
+                <div id="expenses-list"></div>
             </div>
         </div>
     </div>
@@ -182,14 +223,7 @@
         const expensesRef = db.ref('expenses');
 
         let expenses = [];
-
-        // Famiglie
-        const familyMap = {
-            "Livio": "Barella",
-            "Irene": "Barella",
-            "Vale": "Sforzelli",
-            "Lisa": "Sforzelli"
-        };
+        const familyMap = { "Livio": "Barella", "Irene": "Barella", "Vale": "Sforzelli", "Lisa": "Sforzelli" };
 
         expensesRef.on('value', (snapshot) => {
             const data = snapshot.val();
@@ -211,24 +245,16 @@
             const date = document.getElementById('date').value;
             const toSplit = document.getElementById('toSplit').checked;
 
-            if (!description || !amount || !date) {
-                alert("Compila tutti i campi obbligatori!");
-                return;
-            }
+            if (!description || !amount || !date) return alert("Compila tutti i campi!");
 
             const newExpense = {
                 id: Date.now().toString(),
-                date: date,
-                description: description,
-                amount: amount,
-                person: person,
-                toSplit: toSplit
+                date, description, amount, person, toSplit
             };
 
             expenses.unshift(newExpense);
             saveExpenses();
 
-            // Reset form
             document.getElementById('description').value = '';
             document.getElementById('amount').value = '';
             document.getElementById('toSplit').checked = false;
@@ -240,20 +266,16 @@
         }
 
         function renderTotals() {
-            let total = 0;
-            let barella = 0;
-            let sforzelli = 0;
+            let total = 0, barella = 0, sforzelli = 0;
 
             expenses.forEach(exp => {
                 total += exp.amount;
                 if (exp.toSplit) {
-                    // Diviso a metà tra le due famiglie
                     const half = exp.amount / 2;
                     barella += half;
                     sforzelli += half;
                 } else {
-                    if (familyMap[exp.person] === "Barella") barella += exp.amount;
-                    else sforzelli += exp.amount;
+                    familyMap[exp.person] === "Barella" ? barella += exp.amount : sforzelli += exp.amount;
                 }
             });
 
@@ -269,48 +291,49 @@
 
             let filtered = expenses;
 
-            if (personFilter) {
-                filtered = filtered.filter(exp => exp.person === personFilter);
-            }
-
-            if (splitFilter === "split") {
-                filtered = filtered.filter(exp => exp.toSplit);
-            } else if (splitFilter === "nosplit") {
-                filtered = filtered.filter(exp => !exp.toSplit);
-            }
+            if (personFilter) filtered = filtered.filter(e => e.person === personFilter);
+            if (splitFilter === "split") filtered = filtered.filter(e => e.toSplit);
+            if (splitFilter === "nosplit") filtered = filtered.filter(e => !e.toSplit);
 
             container.innerHTML = filtered.map(exp => `
                 <div class="expense-item">
-                    <strong>${exp.date} - ${exp.person}</strong><br>
-                    ${exp.description}<br>
-                    <strong>${exp.amount.toFixed(2)} €</strong>
-                    ${exp.toSplit ? '<span style="color:#c00;"> [DA DIVIDERE]</span>' : ''}
-                    <button class="delete-btn" onclick="deleteExpense('${exp.id}')">✕</button>
-                    <button onclick="editExpense('${exp.id}')" style="float:right; margin-right:10px;">✏️</button>
+                    <div class="expense-header">
+                        <div>
+                            <strong>${exp.date} • ${exp.person}</strong><br>
+                            ${exp.description}
+                        </div>
+                        <div style="text-align:right;">
+                            <strong>${exp.amount.toFixed(2)} €</strong>
+                        </div>
+                    </div>
+                    ${exp.toSplit ? '<span style="color:#c00; font-size:0.9rem;">[DA DIVIDERE]</span>' : ''}
+                    
+                    <div class="expense-actions">
+                        <button class="btn-small btn-edit" onclick="editExpense('${exp.id}')">✏️ Modifica</button>
+                        <button class="btn-small btn-delete" onclick="deleteExpense('${exp.id}')">🗑 Elimina</button>
+                    </div>
                 </div>
             `).join('');
         }
 
         function deleteExpense(id) {
-            if (!confirm("Eliminare questa spesa?")) return;
-            expenses = expenses.filter(exp => exp.id !== id);
-            saveExpenses();
+            if (confirm("Eliminare definitivamente questa spesa?")) {
+                expenses = expenses.filter(exp => exp.id !== id);
+                saveExpenses();
+            }
         }
-
-        let editingId = null;
 
         function editExpense(id) {
             const exp = expenses.find(e => e.id === id);
             if (!exp) return;
 
-            editingId = id;
             document.getElementById('date').value = exp.date;
             document.getElementById('description').value = exp.description;
             document.getElementById('amount').value = exp.amount;
             document.getElementById('person').value = exp.person;
             document.getElementById('toSplit').checked = exp.toSplit;
 
-            alert("Modifica i campi e premi 'Aggiungi Spesa' per salvare le modifiche.");
+            alert("Modifica i dati nei campi in alto e premi 'Aggiungi Spesa' per salvare.");
         }
 
         function clearFilters() {
@@ -319,13 +342,9 @@
             renderExpenses();
         }
 
-        // Imposta data odierna
         document.getElementById('date').valueAsDate = new Date();
 
-        // Inizializzazione
-        window.onload = () => {
-            renderAll();
-        };
+        window.onload = () => renderAll();
     </script>
 </body>
 </html>
