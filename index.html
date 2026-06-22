@@ -36,19 +36,7 @@
     </section>
 
     <section class="grid">
-      <div class="card">
-        <h2>Nuovo utente</h2>
-        <form id="userForm" class="form">
-          <input id="userName" type="text" placeholder="Nome utente" required />
-          <select id="userFamily" required>
-            <option value="family1">Famiglia 1</option>
-            <option value="family2">Famiglia 2</option>
-          </select>
-          <button type="submit">Aggiungi utente</button>
-        </form>
-        <ul id="userList" class="list"></ul>
-      </div>
-
+      <!-- Nuova spesa (sempre visibile) -->
       <div class="card">
         <h2>Nuova spesa</h2>
         <form id="expenseForm" class="form">
@@ -62,7 +50,27 @@
           <button type="submit">Salva spesa</button>
         </form>
       </div>
+
+      <!-- Pannello utente nascosto -->
+      <div class="card" id="userPanelCard" style="display:none;">
+        <h2>Aggiungi utente</h2>
+        <form id="userForm" class="form">
+          <input id="userName" type="text" placeholder="Nome utente" required />
+          <select id="userFamily" required>
+            <option value="family1">Famiglia 1</option>
+            <option value="family2">Famiglia 2</option>
+          </select>
+          <button type="submit">Aggiungi utente</button>
+        </form>
+        <ul id="userList" class="list"></ul>
+        <button id="closeUserPanelBtn" style="margin-top:10px;background:#374151;">Chiudi</button>
+      </div>
     </section>
+
+    <!-- Link discreto per aprire il pannello utente -->
+    <button id="openUserPanelBtn" style="margin-top:10px;background:#1f2937;color:#9ca3af;padding:8px 12px;border-radius:8px;border:1px solid #374151;cursor:pointer;">
+      + Aggiungi utente
+    </button>
 
     <section class="grid">
       <div class="card">
