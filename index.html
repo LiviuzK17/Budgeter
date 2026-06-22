@@ -9,11 +9,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         
-        :root {
-            --gold: #D4AF37;
-            --dark: #2C1F1F;
-        }
-
+        :root { --gold: #D4AF37; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
@@ -42,18 +38,9 @@
             border-bottom: 5px solid var(--gold);
         }
 
-        h1 { 
-            font-size: 2.4rem; 
-            color: var(--gold); 
-            text-shadow: 3px 3px 0 #000; 
-        }
+        h1 { font-size: 2.4rem; color: var(--gold); text-shadow: 3px 3px 0 #000; }
 
-        .main { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-            padding: 12px; 
-        }
+        .main { display: flex; flex-direction: column; gap: 12px; padding: 12px; }
 
         .sidebar, .content {
             background: rgba(60, 47, 47, 0.85);
@@ -73,15 +60,7 @@
             border-radius: 4px;
         }
 
-        button {
-            background: var(--gold);
-            color: #000;
-            cursor: pointer;
-            font-weight: bold;
-            padding: 14px;
-        }
-
-        button:hover { background: #b8860b; }
+        button { background: var(--gold); color: #000; cursor: pointer; font-weight: bold; padding: 14px; }
 
         .expense-item {
             background: rgba(245, 232, 199, 0.92);
@@ -90,14 +69,6 @@
             margin: 10px 0;
             border-radius: 8px;
             border: 2px solid #3C2F2F;
-            position: relative;
-        }
-
-        .expense-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 8px;
         }
 
         .expense-actions {
@@ -125,25 +96,12 @@
             border-radius: 6px;
         }
 
-        .filter-bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .filter-bar select, .filter-bar button {
-            flex: 1;
-            min-width: 140px;
-        }
+        .filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .filter-bar select, .filter-bar button { flex: 1; min-width: 140px; }
 
         @media (min-width: 768px) {
-            .main {
-                flex-direction: row;
-            }
-            .sidebar { 
-                max-width: 380px; 
-            }
+            .main { flex-direction: row; }
+            .sidebar { max-width: 380px; }
         }
     </style>
 </head>
@@ -155,32 +113,25 @@
         </header>
 
         <div class="main">
-            <!-- Sidebar Nuova Spesa -->
             <div class="sidebar">
                 <h2 style="color:var(--gold); margin-bottom:12px;">➕ Nuova Spesa</h2>
-                
                 <input type="date" id="date">
                 <input type="text" id="description" placeholder="Descrizione spesa">
                 <input type="number" id="amount" placeholder="Importo €" step="0.01">
-                
                 <select id="person">
                     <option value="Livio">Livio</option>
                     <option value="Irene">Irene</option>
                     <option value="Vale">Vale</option>
                     <option value="Lisa">Lisa</option>
                 </select>
-
                 <label style="color:#ddd; display:block; margin:10px 0 8px;">
                     <input type="checkbox" id="toSplit"> DA DIVIDERE tra le due famiglie
                 </label>
-
-                <button onclick="addExpense()">Aggiungi Spesa</button>
+                <button onclick="addExpense()">Aggiungi / Aggiorna Spesa</button>
             </div>
 
-            <!-- Lista Spese -->
             <div class="content">
                 <div class="total" id="total-all">Totale: 0.00 €</div>
-                
                 <div style="display:flex; justify-content:space-around; margin:12px 0; font-size:0.95rem;">
                     <div>Barella: <span id="barella-total" style="color:#4CAF50;">0.00 €</span></div>
                     <div>Sforzelli: <span id="sforzelli-total" style="color:#4CAF50;">0.00 €</span></div>
@@ -208,7 +159,6 @@
     </div>
 
     <script>
-        // ==================== FIREBASE ====================
         const firebaseConfig = {
             apiKey: "AIzaSyDIMfn30rD3EHlrQFQx6Yko_Vrimx-jAws",
             authDomain: "budgeter-75f51.firebaseapp.com",
@@ -225,6 +175,17 @@
         let expenses = [];
         const familyMap = { "Livio": "Barella", "Irene": "Barella", "Vale": "Sforzelli", "Lisa": "Sforzelli" };
 
+        // ==================== CARICAMENTO MIGLIORATO ====================
+        function loadExpenses() {
+            expensesRef.once('value').then((snapshot) => {
+                const data = snapshot.val();
+                expenses = data ? Object.values(data) : [];
+                expenses.sort((a,b) => b.date.localeCompare(a.date));
+                renderAll();
+            }).catch(err => console.error("Errore caricamento:", err));
+        }
+
+        // Ascolto in tempo reale per aggiornamenti da altri dispositivi
         expensesRef.on('value', (snapshot) => {
             const data = snapshot.val();
             expenses = data ? Object.values(data) : [];
@@ -245,7 +206,10 @@
             const date = document.getElementById('date').value;
             const toSplit = document.getElementById('toSplit').checked;
 
-            if (!description || !amount || !date) return alert("Compila tutti i campi!");
+            if (!description || !amount || !date) {
+                alert("Compila tutti i campi obbligatori!");
+                return;
+            }
 
             const newExpense = {
                 id: Date.now().toString(),
@@ -255,6 +219,7 @@
             expenses.unshift(newExpense);
             saveExpenses();
 
+            // Reset form
             document.getElementById('description').value = '';
             document.getElementById('amount').value = '';
             document.getElementById('toSplit').checked = false;
@@ -269,9 +234,9 @@
             let total = 0, barella = 0, sforzelli = 0;
 
             expenses.forEach(exp => {
-                total += exp.amount;
+                total += exp.amount || 0;
                 if (exp.toSplit) {
-                    const half = exp.amount / 2;
+                    const half = (exp.amount || 0) / 2;
                     barella += half;
                     sforzelli += half;
                 } else {
@@ -297,17 +262,11 @@
 
             container.innerHTML = filtered.map(exp => `
                 <div class="expense-item">
-                    <div class="expense-header">
-                        <div>
-                            <strong>${exp.date} • ${exp.person}</strong><br>
-                            ${exp.description}
-                        </div>
-                        <div style="text-align:right;">
-                            <strong>${exp.amount.toFixed(2)} €</strong>
-                        </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <div><strong>${exp.date} • ${exp.person}</strong><br>${exp.description}</div>
+                        <div style="text-align:right;"><strong>${(exp.amount||0).toFixed(2)} €</strong></div>
                     </div>
-                    ${exp.toSplit ? '<span style="color:#c00; font-size:0.9rem;">[DA DIVIDERE]</span>' : ''}
-                    
+                    ${exp.toSplit ? '<span style="color:#c00;">[DA DIVIDERE]</span>' : ''}
                     <div class="expense-actions">
                         <button class="btn-small btn-edit" onclick="editExpense('${exp.id}')">✏️ Modifica</button>
                         <button class="btn-small btn-delete" onclick="deleteExpense('${exp.id}')">🗑 Elimina</button>
@@ -317,7 +276,7 @@
         }
 
         function deleteExpense(id) {
-            if (confirm("Eliminare definitivamente questa spesa?")) {
+            if (confirm("Eliminare questa spesa?")) {
                 expenses = expenses.filter(exp => exp.id !== id);
                 saveExpenses();
             }
@@ -326,14 +285,14 @@
         function editExpense(id) {
             const exp = expenses.find(e => e.id === id);
             if (!exp) return;
-
+            
             document.getElementById('date').value = exp.date;
             document.getElementById('description').value = exp.description;
             document.getElementById('amount').value = exp.amount;
             document.getElementById('person').value = exp.person;
             document.getElementById('toSplit').checked = exp.toSplit;
-
-            alert("Modifica i dati nei campi in alto e premi 'Aggiungi Spesa' per salvare.");
+            
+            alert("Hai caricato la spesa per la modifica. Modifica i campi e premi 'Aggiungi / Aggiorna Spesa'");
         }
 
         function clearFilters() {
@@ -342,9 +301,13 @@
             renderExpenses();
         }
 
+        // Imposta data odierna
         document.getElementById('date').valueAsDate = new Date();
 
-        window.onload = () => renderAll();
+        // Caricamento iniziale
+        window.onload = () => {
+            loadExpenses();
+        };
     </script>
 </body>
 </html>
