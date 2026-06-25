@@ -38,7 +38,7 @@
         .totals { display: grid; grid-template-columns: 1fr; gap: 15px; margin: 25px 0; }
         .card { background: #1a2f4f; padding: 18px; border-radius: 10px; border: 2px solid #ffd700; }
         .filters { margin: 20px 0; padding: 15px; background: #1a2f4f; border: 2px solid #ffd700; border-radius: 10px; }
-        .status { text-align: center; margin: 10px 0; padding: 10px; border-radius: 6px; font-weight: bold; }
+        .status { text-align: center; margin: 10px 0; padding: 12px; border-radius: 6px; font-weight: bold; }
         @media (min-width: 768px) {
             .totals { grid-template-columns: repeat(3, 1fr); }
             button { flex: 0; }
@@ -149,16 +149,20 @@
     </div>
 
     <script>
+        // ==================== TUA CONFIGURAZIONE FIREBASE ====================
         const firebaseConfig = {
             apiKey: "AIzaSyDIMfn30rD3EHlrQFQx6Yko_Vrimx-jAws",
             authDomain: "budgeter-75f51.firebaseapp.com",
+            databaseURL: "https://budgeter-75f51-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "budgeter-75f51",
             storageBucket: "budgeter-75f51.firebasestorage.app",
             messagingSenderId: "1089429460683",
             appId: "1:1089429460683:web:709f3443e46441e9b8ed4e"
         };
 
-        let expensesRef;
+        firebase.initializeApp(firebaseConfig);
+        const expensesRef = firebase.database().ref('expenses');
+
         let expenses = [];
         let currentChartPie, currentChartBar;
         let editingId = null;
@@ -170,17 +174,11 @@
             { name: "Valerio", family: "Sforzelli" }
         ];
 
-        function initFirebase() {
-            firebase.initializeApp(firebaseConfig);
-            expensesRef = firebase.database().ref('expenses');
-            loadExpenses();
-        }
-
         function showStatus(msg, color = "green") {
             const el = document.getElementById('status');
             el.style.color = color === "red" ? "#ff6666" : "#66ff99";
             el.textContent = msg;
-            setTimeout(() => el.textContent = "", 4000);
+            setTimeout(() => el.textContent = "", 5000);
         }
 
         function saveExpense() {
@@ -188,8 +186,8 @@
             const category = document.getElementById('category').value;
             const amount = parseFloat(document.getElementById('amount').value);
             const payer = document.getElementById('payer').value;
-            const split = document.getElementById('split').checked;
             const dateStr = document.getElementById('expenseDate').value;
+            const split = document.getElementById('split').checked;
 
             if (!desc || !category || isNaN(amount) || !payer || !dateStr) {
                 return alert("❌ Compila tutti i campi obbligatori");
@@ -207,17 +205,17 @@
             if (editingId) {
                 expensesRef.child(editingId).update(expenseData)
                     .then(() => {
-                        showStatus("✅ Spesa modificata con successo");
+                        showStatus("✅ Spesa modificata con successo!");
                         cancelEdit();
                     })
-                    .catch(err => showStatus("Errore durante la modifica", "red"));
+                    .catch(err => showStatus("❌ Errore modifica: " + err.message, "red"));
             } else {
                 expensesRef.push(expenseData)
                     .then(() => {
                         showStatus("✅ Spesa salvata correttamente!");
                         cancelEdit();
                     })
-                    .catch(err => showStatus("Errore durante il salvataggio", "red"));
+                    .catch(err => showStatus("❌ Errore salvataggio: " + err.message, "red"));
             }
         }
 
@@ -234,7 +232,7 @@
 
                     const row = document.createElement('tr');
                     if (exp.split) row.classList.add('split-yes');
-
+                    
                     row.innerHTML = `
                         <td>${new Date(exp.date).toLocaleDateString('it-IT')}</td>
                         <td><strong>${exp.category}</strong></td>
@@ -249,7 +247,6 @@
                     `;
                     tbody.appendChild(row);
                 });
-
                 updateAll();
             });
         }
@@ -257,7 +254,6 @@
         function editExpense(id) {
             const exp = expenses.find(e => e.id === id);
             if (!exp) return;
-
             editingId = id;
             document.getElementById('formTitle').textContent = "Modifica Spesa";
             document.getElementById('desc').value = exp.description;
@@ -292,6 +288,7 @@
             }
         }
 
+        // ==================== Funzioni Grafici e Filtri (invariate) ====================
         function getFilteredExpenses() {
             const catFilter = document.getElementById('chartCategoryFilter').value;
             const period = document.getElementById('chartPeriodFilter').value;
@@ -307,8 +304,7 @@
                 const to = document.getElementById('toDate').value;
                 if (from) filtered = filtered.filter(e => new Date(e.date) >= new Date(from));
                 if (to) {
-                    const end = new Date(to);
-                    end.setHours(23,59,59);
+                    const end = new Date(to); end.setHours(23,59,59);
                     filtered = filtered.filter(e => new Date(e.date) <= end);
                 }
             }
@@ -324,7 +320,6 @@
                 else if (user.family === "Barella") barella += exp.amount;
                 else sforzelli += exp.amount;
             });
-
             const sharedEach = shared / 2;
             return {
                 barellaShouldPay: barella + sharedEach,
@@ -342,42 +337,30 @@
 
             currentChartPie = new Chart(document.getElementById('pieChart'), {
                 type: 'pie',
-                data: {
-                    labels: ['Barella', 'Sforzelli'],
-                    datasets: [{ data: [totals.barellaShouldPay, totals.sforzelliShouldPay], backgroundColor: ['#3498db', '#e74c3c'] }]
-                }
+                data: { labels: ['Barella', 'Sforzelli'], datasets: [{ data: [totals.barellaShouldPay, totals.sforzelliShouldPay], backgroundColor: ['#3498db', '#e74c3c'] }] }
             });
 
             currentChartBar = new Chart(document.getElementById('barChart'), {
                 type: 'bar',
                 data: {
                     labels: ['Barella', 'Sforzelli', 'Condivise'],
-                    datasets: [{
-                        label: 'Importo €',
-                        data: [totals.barellaShouldPay, totals.sforzelliShouldPay, totals.sharedTotal],
-                        backgroundColor: ['#3498db', '#e74c3c', '#ffd700']
-                    }]
+                    datasets: [{ label: 'Importo €', data: [totals.barellaShouldPay, totals.sforzelliShouldPay, totals.sharedTotal], backgroundColor: ['#3498db', '#e74c3c', '#ffd700'] }]
                 }
             });
         }
 
-        function updateAll() {
-            updateCharts();
-        }
-
+        function updateAll() { updateCharts(); }
         function toggleDateRange() {
             const isCustom = document.getElementById('chartPeriodFilter').value === "custom";
             document.getElementById('dateRange').style.display = isCustom ? "block" : "none";
             updateCharts();
         }
-
         function filterExpenses() {
             const term = document.getElementById('search').value.toLowerCase();
             document.querySelectorAll('#expensesTable tbody tr').forEach(row => {
                 row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
             });
         }
-
         function showTab(n) {
             document.querySelectorAll('.tab').forEach(tab => tab.style.display = 'none');
             document.getElementById(`tab${n}`).style.display = 'block';
@@ -390,7 +373,7 @@
             document.getElementById('fromDate').value = new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0];
             document.getElementById('toDate').value = new Date().toISOString().split('T')[0];
             
-            initFirebase();
+            loadExpenses();
             showTab(0);
         };
     </script>
