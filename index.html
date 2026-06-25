@@ -9,15 +9,24 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Georgia', serif; margin: 0; padding: 15px; background: linear-gradient(#0a1f3d, #1a2f4f); color: #f4e8c1; min-height: 100vh; }
-        .container { max-width: 100%; margin: auto; background: #112233; padding: 20px; border-radius: 15px; box-shadow: 0 0 25px rgba(255, 215, 0, 0.4); border: 3px solid #ffd700; }
+        body { 
+            font-family: 'Georgia', serif; 
+            margin: 0; padding: 15px; 
+            background: linear-gradient(#0a1f3d, #1a2f4f); 
+            color: #f4e8c1; 
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 100%; margin: auto; background: #112233; 
+            padding: 20px; border-radius: 15px; 
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.4); 
+            border: 3px solid #ffd700; 
+        }
         h1 { text-align: center; color: #ffd700; text-shadow: 3px 3px 0 #8b0000; font-size: 2.4em; margin: 10px 0 20px 0; }
         nav { display: flex; gap: 8px; margin: 20px 0; flex-wrap: wrap; justify-content: center; }
         button { padding: 12px 16px; cursor: pointer; border: 2px solid #ffd700; border-radius: 8px; background: #8b0000; color: #ffd700; font-weight: bold; flex: 1; min-width: 140px; }
         button:hover { background: #ffd700; color: #8b0000; }
         .btn-success { background: #006400; }
-        .btn-warning { background: #b8860b; }
-        .btn-danger { background: #8b0000; }
 
         input, select { padding: 12px; margin: 8px 0; width: 100%; border-radius: 6px; border: 2px solid #ffd700; background: #1a2f4f; color: #f4e8c1; font-size: 1rem; }
         table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #0f1f33; font-size: 0.95rem; }
@@ -26,9 +35,8 @@
         .split-yes { background: #003300; }
         .totals { display: grid; grid-template-columns: 1fr; gap: 15px; margin: 25px 0; }
         .card { background: #1a2f4f; padding: 18px; border-radius: 10px; border: 2px solid #ffd700; }
-        .filters { margin: 20px 0; padding: 15px; background: #1a2f4f; border: 2px solid #ffd700; border-radius: 10px; }
         .status { text-align: center; margin: 10px 0; padding: 12px; border-radius: 6px; font-weight: bold; }
-        @media (min-width: 768px) { .totals { grid-template-columns: repeat(3, 1fr); } button { flex: 0; } }
+        .action-btn { padding: 6px 10px; margin: 2px; font-size: 1.2em; }
     </style>
 </head>
 <body>
@@ -39,12 +47,11 @@
             <button onclick="showTab(0)">➕ Nuova Spesa</button>
             <button onclick="showTab(2)">📜 Lista Spese</button>
             <button onclick="showTab(3)">🏴‍☠️ Riepilogo</button>
-            <button onclick="showTab(4)">📊 Grafici</button>
         </nav>
 
         <div id="status" class="status"></div>
 
-        <!-- TAB 0 -->
+        <!-- TAB 0: Nuova Spesa -->
         <div id="tab0" class="tab">
             <h2 id="formTitle">➕ Nuova Spesa</h2>
             <input type="hidden" id="editId">
@@ -80,7 +87,7 @@
         <!-- TAB 2: Lista Spese -->
         <div id="tab2" class="tab" style="display:none;">
             <h2>📜 Lista Spese</h2>
-            <input type="text" id="search" placeholder="Cerca spesa..." onkeyup="filterExpenses()">
+            <input type="text" id="search" placeholder="Cerca (data, categoria, persona...)" onkeyup="filterExpenses()">
             <table id="expensesTable">
                 <thead>
                     <tr>
@@ -102,40 +109,6 @@
             <h2>🏴‍☠️ Riepilogo Famiglie</h2>
             <div class="totals" id="familyTotals"></div>
         </div>
-
-        <!-- TAB 4: Grafici -->
-        <div id="tab4" class="tab" style="display:none;">
-            <h2>📊 Grafici</h2>
-            <div class="filters">
-                <select id="chartView" onchange="updateCharts()">
-                    <option value="all">Totale Viaggio</option>
-                    <option value="barella">Solo Barella</option>
-                    <option value="sforzelli">Solo Sforzelli</option>
-                </select>
-                <select id="chartCategoryFilter" onchange="updateCharts()">
-                    <option value="Tutti">Tutte le categorie</option>
-                    <option value="Benzina">⛽ Benzina</option>
-                    <option value="Alimentari">🍖 Alimentari</option>
-                    <option value="Campeggio">⛺ Campeggio</option>
-                    <option value="Ristoranti">🍺 Ristoranti</option>
-                    <option value="Pedaggi">🛣️ Pedaggi</option>
-                    <option value="Attrazioni">🏰 Attrazioni</option>
-                    <option value="Manutenzione">🔧 Manutenzione</option>
-                    <option value="Varie">🪙 Varie</option>
-                </select>
-                <select id="chartPeriodFilter" onchange="toggleDateRange()">
-                    <option value="all">Tutto il viaggio</option>
-                    <option value="7">Ultimi 7 giorni</option>
-                    <option value="custom">Periodo personalizzato</option>
-                </select>
-                <div id="dateRange" style="display:none; margin-top:10px;">
-                    <input type="date" id="fromDate" onchange="updateCharts()"> 
-                    <span style="color:#ffd700;">→</span> 
-                    <input type="date" id="toDate" onchange="updateCharts()">
-                </div>
-            </div>
-            <canvas id="mainChart" height="280"></canvas>
-        </div>
     </div>
 
     <script>
@@ -153,7 +126,6 @@
         const expensesRef = firebase.database().ref('expenses');
 
         let expenses = [];
-        let currentChart;
         let editingId = null;
 
         const users = [
@@ -212,8 +184,8 @@
                         <td>${exp.payer}</td>
                         <td>${exp.split ? '✅ Sì' : '❌ No'}</td>
                         <td>
-                            <button onclick="editExpense('${exp.id}')" class="btn-warning">Modifica</button>
-                            <button onclick="deleteExpense('${exp.id}')" class="btn-danger">Elimina</button>
+                            <button onclick="editExpense('${exp.id}')" class="action-btn" title="Modifica">✏️</button>
+                            <button onclick="deleteExpense('${exp.id}')" class="action-btn" title="Elimina">🗑️</button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -224,7 +196,7 @@
 
         function editExpense(id) {
             const exp = expenses.find(e => e.id === id);
-            if (!exp) return alert("Errore: spesa non trovata");
+            if (!exp) return;
 
             editingId = id;
             document.getElementById('formTitle').textContent = "Modifica Spesa";
@@ -253,7 +225,7 @@
         }
 
         function deleteExpense(id) {
-            if (confirm("Vuoi davvero eliminare questa spesa?")) {
+            if (confirm("Eliminare definitivamente questa spesa?")) {
                 expensesRef.child(id).remove()
                     .then(() => showStatus("✅ Spesa eliminata"))
                     .catch(() => showStatus("❌ Errore eliminazione", "red"));
@@ -273,80 +245,25 @@
             });
 
             const sharedEach = shared / 2;
-            const barellaTotal = barellaDirect + sharedEach;
-            const sforzelliTotal = sforzelliDirect + sharedEach;
 
             document.getElementById('familyTotals').innerHTML = `
-                <div class="card"><h3>Barella</h3><p>Dirette: € ${barellaDirect.toFixed(2)}</p><p>Condivise: € ${sharedEach.toFixed(2)}</p><p><strong>Totale: € ${barellaTotal.toFixed(2)}</strong></p></div>
-                <div class="card"><h3>Sforzelli</h3><p>Dirette: € ${sforzelliDirect.toFixed(2)}</p><p>Condivise: € ${sharedEach.toFixed(2)}</p><p><strong>Totale: € ${sforzelliTotal.toFixed(2)}</strong></p></div>
-                <div class="card"><h3>Totale Viaggio</h3><p><strong>€ ${(barellaTotal + sforzelliTotal).toFixed(2)}</strong></p></div>
+                <div class="card">
+                    <h3>Barella</h3>
+                    <p>Spese personali: € ${barellaDirect.toFixed(2)}</p>
+                    <p>Quota condivise: € ${sharedEach.toFixed(2)}</p>
+                    <p><strong>Totale: € ${(barellaDirect + sharedEach).toFixed(2)}</strong></p>
+                </div>
+                <div class="card">
+                    <h3>Sforzelli</h3>
+                    <p>Spese personali: € ${sforzelliDirect.toFixed(2)}</p>
+                    <p>Quota condivise: € ${sharedEach.toFixed(2)}</p>
+                    <p><strong>Totale: € ${(sforzelliDirect + sharedEach).toFixed(2)}</strong></p>
+                </div>
+                <div class="card">
+                    <h3>Totale Viaggio</h3>
+                    <p><strong>€ ${(barellaDirect + sforzelliDirect + shared).toFixed(2)}</strong></p>
+                </div>
             `;
-        }
-
-        // ==================== GRAFICI ====================
-        function getFilteredExpenses() {
-            const catFilter = document.getElementById('chartCategoryFilter').value;
-            const period = document.getElementById('chartPeriodFilter').value;
-            let filtered = expenses;
-
-            if (catFilter !== "Tutti") filtered = filtered.filter(e => e.category === catFilter);
-            if (period === "7") {
-                const limit = Date.now() - 7*24*60*60*1000;
-                filtered = filtered.filter(e => new Date(e.date) >= limit);
-            } else if (period === "custom") {
-                const from = document.getElementById('fromDate').value;
-                const to = document.getElementById('toDate').value;
-                if (from) filtered = filtered.filter(e => new Date(e.date) >= new Date(from));
-                if (to) {
-                    const end = new Date(to); end.setHours(23,59,59);
-                    filtered = filtered.filter(e => new Date(e.date) <= end);
-                }
-            }
-            return filtered;
-        }
-
-        function calculateFamilyTotals(filtered) {
-            let barella = 0, sforzelli = 0, shared = 0;
-            filtered.forEach(exp => {
-                const user = users.find(u => u.name === exp.payer);
-                if (!user) return;
-                if (exp.split) shared += exp.amount;
-                else if (user.family === "Barella") barella += exp.amount;
-                else sforzelli += exp.amount;
-            });
-            const sharedEach = shared / 2;
-            return { barellaShouldPay: barella + sharedEach, sforzelliShouldPay: sforzelli + sharedEach, sharedTotal: shared };
-        }
-
-        function updateCharts() {
-            const view = document.getElementById('chartView').value;
-            const filtered = getFilteredExpenses();
-            const totals = calculateFamilyTotals(filtered);
-
-            if (currentChart) currentChart.destroy();
-
-            let labels, data, colors;
-            if (view === "all") {
-                labels = ['Barella', 'Sforzelli', 'Condivise'];
-                data = [totals.barellaShouldPay, totals.sforzelliShouldPay, totals.sharedTotal];
-                colors = ['#3498db', '#e74c3c', '#ffd700'];
-            } else if (view === "barella") {
-                labels = ['Barella']; data = [totals.barellaShouldPay]; colors = ['#3498db'];
-            } else {
-                labels = ['Sforzelli']; data = [totals.sforzelliShouldPay]; colors = ['#e74c3c'];
-            }
-
-            currentChart = new Chart(document.getElementById('mainChart'), {
-                type: 'bar',
-                data: { labels, datasets: [{ label: 'Importo €', data, backgroundColor: colors, borderWidth: 2 }] },
-                options: { responsive: true, scales: { y: { beginAtZero: true } } }
-            });
-        }
-
-        function toggleDateRange() {
-            const isCustom = document.getElementById('chartPeriodFilter').value === "custom";
-            document.getElementById('dateRange').style.display = isCustom ? "block" : "none";
-            updateCharts();
         }
 
         function filterExpenses() {
@@ -358,21 +275,16 @@
 
         function updateAll() {
             updateSummary();
-            updateCharts();
         }
 
         function showTab(n) {
             document.querySelectorAll('.tab').forEach(tab => tab.style.display = 'none');
             document.getElementById(`tab${n}`).style.display = 'block';
             if (n === 3) updateSummary();
-            if (n === 4) updateCharts();
         }
 
         window.onload = () => {
             document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
-            document.getElementById('fromDate').value = new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0];
-            document.getElementById('toDate').value = new Date().toISOString().split('T')[0];
-            
             loadExpenses();
             showTab(0);
         };
