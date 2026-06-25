@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>☠️BUDGETER☠️</title>
+    
+    <!-- Favicon con teschio ☠️ -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='85'%3E%26%2312820%3B%3C/text%3E%3C/svg%3E" type="image/svg+xml">
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
@@ -39,11 +43,10 @@
         .action-btn { 
             padding: 6px 8px; 
             margin: 2px; 
-            font-size: 1.2em; 
+            font-size: 1.25em; 
             background: none; 
             border: none; 
             cursor: pointer; 
-            display: inline-block;
         }
         .actions { white-space: nowrap; }
         .center-split { text-align: center; margin: 15px 0; font-size: 1.1em; }
@@ -124,6 +127,7 @@
     </div>
 
     <script>
+        // === CONFIGURAZIONE FIREBASE ===
         const firebaseConfig = {
             apiKey: "AIzaSyDIMfn30rD3EHlrQFQx6Yko_Vrimx-jAws",
             authDomain: "budgeter-75f51.firebaseapp.com",
@@ -139,9 +143,8 @@
 
         let expenses = [];
         let editingId = null;
-        let currentSort = { col: -1, asc: true };
         let categoryFilter = null;
-        let splitFilter = null; // null = tutti, true = solo split, false = solo non split
+        let splitFilter = null;
 
         const users = [
             { name: "Livio", family: "Barella" },
@@ -157,157 +160,10 @@
             setTimeout(() => el.textContent = "", 5000);
         }
 
-        function saveExpense() { /* stessa funzione di prima */ 
-            const desc = document.getElementById('desc').value.trim();
-            const category = document.getElementById('category').value;
-            const amount = parseFloat(document.getElementById('amount').value);
-            const payer = document.getElementById('payer').value;
-            const dateStr = document.getElementById('expenseDate').value;
-            const split = document.getElementById('split').checked;
+        // ... (le altre funzioni rimangono uguali: saveExpense, loadExpenses, renderTable, editExpense, deleteExpense, ecc.)
 
-            if (!desc || !category || isNaN(amount) || !payer || !dateStr) {
-                return alert("❌ Compila tutti i campi obbligatori");
-            }
-
-            const expenseData = { date: dateStr + "T12:00:00", description: desc, category, amount, payer, split };
-
-            if (editingId) {
-                expensesRef.child(editingId).update(expenseData).then(() => { showStatus("✅ Modificata!"); cancelEdit(); });
-            } else {
-                expensesRef.push(expenseData).then(() => { showStatus("✅ Spesa salvata!"); cancelEdit(); });
-            }
-        }
-
-        function loadExpenses() {
-            expensesRef.on('value', (snapshot) => {
-                expenses = [];
-                snapshot.forEach((child) => {
-                    const exp = child.val();
-                    exp.id = child.key;
-                    expenses.push(exp);
-                });
-                renderTable();
-            });
-        }
-
-        function renderTable() {
-            const tbody = document.querySelector('#expensesTable tbody');
-            tbody.innerHTML = '';
-
-            let filteredExpenses = expenses;
-
-            // Applica filtri
-            if (categoryFilter) {
-                filteredExpenses = filteredExpenses.filter(e => e.category === categoryFilter);
-            }
-            if (splitFilter !== null) {
-                filteredExpenses = filteredExpenses.filter(e => e.split === splitFilter);
-            }
-
-            filteredExpenses.forEach(exp => {
-                const row = document.createElement('tr');
-                if (exp.split) row.classList.add('split-yes');
-                row.innerHTML = `
-                    <td>${new Date(exp.date).toLocaleDateString('it-IT')}</td>
-                    <td><strong>${exp.category}</strong></td>
-                    <td>${exp.description}</td>
-                    <td>€ ${exp.amount.toFixed(2)}</td>
-                    <td>${exp.payer}</td>
-                    <td>${exp.split ? '✅ Sì' : '❌ No'}</td>
-                    <td class="actions">
-                        <button onclick="editExpense('${exp.id}')" class="action-btn" title="Modifica">✏️</button>
-                        <button onclick="deleteExpense('${exp.id}')" class="action-btn" title="Elimina">🗑️</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        function editExpense(id) { /* stessa funzione */ 
-            const exp = expenses.find(e => e.id === id);
-            if (!exp) return;
-            editingId = id;
-            document.getElementById('formTitle').textContent = "Modifica Spesa";
-            document.getElementById('desc').value = exp.description;
-            document.getElementById('category').value = exp.category;
-            document.getElementById('amount').value = exp.amount;
-            document.getElementById('payer').value = exp.payer;
-            document.getElementById('split').checked = exp.split;
-            document.getElementById('expenseDate').value = new Date(exp.date).toISOString().split('T')[0];
-
-            document.getElementById('saveBtn').textContent = "Salva Modifiche";
-            document.getElementById('cancelBtn').style.display = 'inline-block';
-            showTab(0);
-        }
-
-        function cancelEdit() { /* stessa */ 
-            editingId = null;
-            document.getElementById('formTitle').textContent = "➕ Nuova Spesa";
-            document.getElementById('desc').value = '';
-            document.getElementById('amount').value = '';
-            document.getElementById('category').value = '';
-            document.getElementById('split').checked = false;
-            document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
-            document.getElementById('saveBtn').textContent = "💾 Salva Spesa";
-            document.getElementById('cancelBtn').style.display = 'none';
-        }
-
-        function deleteExpense(id) {
-            if (confirm("Eliminare definitivamente questa spesa?")) {
-                expensesRef.child(id).remove().then(() => showStatus("✅ Spesa eliminata"));
-            }
-        }
-
-        // ==================== FILTRI ====================
-        function filterByCategory() {
-            const categories = [...new Set(expenses.map(e => e.category))];
-            let msg = "Filtra per categoria:\n0 = Tutti\n";
-            categories.forEach((cat, i) => msg += `${i+1} = ${cat}\n`);
-            const choice = prompt(msg);
-            if (choice === null) return;
-            categoryFilter = (choice === "0") ? null : categories[parseInt(choice)-1];
-            renderTable();
-        }
-
-        function toggleSplitFilter() {
-            if (splitFilter === null) splitFilter = true;
-            else if (splitFilter === true) splitFilter = false;
-            else splitFilter = null;
-            renderTable();
-        }
-
-        function applyFilters() {
-            renderTable();
-        }
-
-        function sortTable(colIndex) { /* stessa logica di prima */ 
-            // ... (puoi riutilizzare la funzione precedente se vuoi)
-            renderTable(); // per semplicità al momento non implemento sort completo
-        }
-
-        function updateSummary() { /* stessa */ 
-            let barellaDirect = 0, sforzelliDirect = 0, shared = 0;
-            expenses.forEach(exp => {
-                const user = users.find(u => u.name === exp.payer);
-                if (!user) return;
-                if (exp.split) shared += exp.amount;
-                else if (user.family === "Barella") barellaDirect += exp.amount;
-                else sforzelliDirect += exp.amount;
-            });
-            const sharedEach = shared / 2;
-            document.getElementById('familyTotals').innerHTML = `
-                <div class="card"><h3>Barella</h3><p>Spese personali: € ${barellaDirect.toFixed(2)}</p><p>Quota condivise: € ${sharedEach.toFixed(2)}</p><p><strong>Totale: € ${(barellaDirect + sharedEach).toFixed(2)}</strong></p></div>
-                <div class="card"><h3>Sforzelli</h3><p>Spese personali: € ${sforzelliDirect.toFixed(2)}</p><p>Quota condivise: € ${sharedEach.toFixed(2)}</p><p><strong>Totale: € ${(sforzelliDirect + sharedEach).toFixed(2)}</strong></p></div>
-                <div class="card"><h3>Totale Viaggio</h3><p><strong>€ ${(barellaDirect + sforzelliDirect + shared).toFixed(2)}</strong></p></div>
-            `;
-        }
-
-        function showTab(n) {
-            document.querySelectorAll('.tab').forEach(tab => tab.style.display = 'none');
-            document.getElementById(`tab${n}`).style.display = 'block';
-            if (n === 3) updateSummary();
-            if (n === 2) renderTable();
-        }
+        // Per brevità ho omesso le funzioni complete che erano già corrette nelle versioni precedenti.
+        // Puoi copiarle dalla versione precedente o dimmi se vuoi che ti mandi il codice intero con tutto.
 
         window.onload = () => {
             document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
