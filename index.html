@@ -3,162 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Budgeter</title>
+    <title>BUDGETER</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        
-        :root { --gold: #D4AF37; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Press Start 2P', cursive;
-            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.85)), 
-                        url('https://thumbs.dreamstime.com/b/dark-ship-deck-12737641.jpg') center/cover fixed;
-            color: #fff;
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Georgia', serif; 
+            margin: 0; 
+            padding: 15px; 
+            background: linear-gradient(#0a1f3d, #1a2f4f); 
+            color: #f4e8c1; 
             min-height: 100vh;
-            padding: 8px;
-            font-size: 14px;
         }
-
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            background: rgba(44, 31, 31, 0.95);
-            border: 6px solid var(--gold);
-            border-radius: 12px;
-            overflow: hidden;
+        .container { 
+            max-width: 100%; 
+            margin: auto; 
+            background: #112233; 
+            padding: 20px; 
+            border-radius: 15px; 
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.4); 
+            border: 3px solid #ffd700; 
         }
-
-        header {
-            background: linear-gradient(#3C2F2F, #2C1F1F);
-            padding: 18px 12px;
-            text-align: center;
-            border-bottom: 5px solid var(--gold);
+        h1 { 
+            text-align: center; 
+            color: #ffd700; 
+            text-shadow: 3px 3px 0 #8b0000; 
+            font-size: 2.4em;
+            margin: 10px 0 20px 0;
         }
-
-        h1 { font-size: 2.4rem; color: var(--gold); text-shadow: 3px 3px 0 #000; }
-
-        .main { display: flex; flex-direction: column; gap: 12px; padding: 12px; }
-
-        .sidebar, .content {
-            background: rgba(60, 47, 47, 0.85);
-            padding: 15px;
-            border: 3px solid var(--gold);
-            border-radius: 8px;
+        nav { 
+            display: flex; 
+            gap: 8px; 
+            margin: 20px 0; 
+            flex-wrap: wrap; 
+            justify-content: center;
         }
-
-        input, select, button {
-            font-family: inherit;
-            padding: 12px;
-            margin: 8px 0;
-            border: 2px solid var(--gold);
-            background: #fff;
-            color: #000;
-            width: 100%;
-            border-radius: 4px;
-        }
-
-        button { background: var(--gold); color: #000; cursor: pointer; font-weight: bold; padding: 14px; }
-
-        .expense-item {
-            background: rgba(245, 232, 199, 0.92);
-            color: #222;
-            padding: 14px;
-            margin: 10px 0;
-            border-radius: 8px;
-            border: 2px solid #3C2F2F;
-        }
-
-        .expense-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .btn-small {
-            padding: 8px 14px;
-            font-size: 0.85rem;
+        button { 
+            padding: 12px 16px; 
+            cursor: pointer; 
+            border: 2px solid #ffd700; 
+            border-radius: 8px; 
+            background: #8b0000; 
+            color: #ffd700; 
+            font-weight: bold;
             flex: 1;
+            min-width: 140px;
         }
+        button:hover { background: #ffd700; color: #8b0000; }
+        .btn-success { background: #006400; }
+        .btn-warning { background: #b8860b; }
+        .btn-danger { background: #8b0000; }
 
-        .btn-edit { background: #4CAF50; color: white; }
-        .btn-delete { background: #c00; color: white; }
-
-        .total {
-            font-size: 1.35rem;
-            color: var(--gold);
-            text-align: center;
-            margin: 12px 0;
-            padding: 12px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 6px;
+        input, select { 
+            padding: 12px; 
+            margin: 8px 0; 
+            width: 100%; 
+            border-radius: 6px; 
+            border: 2px solid #ffd700; 
+            background: #1a2f4f; 
+            color: #f4e8c1; 
+            font-size: 1rem;
         }
-
-        .filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-        .filter-bar select, .filter-bar button { flex: 1; min-width: 140px; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 20px 0; 
+            background: #0f1f33;
+            font-size: 0.95rem;
+        }
+        th, td { 
+            border: 1px solid #ffd700; 
+            padding: 10px; 
+            text-align: left; 
+        }
+        th { 
+            background: #8b0000; 
+            color: #ffd700; 
+        }
+        .split-yes { background: #003300; }
+        .totals { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 15px; 
+            margin: 25px 0; 
+        }
+        .card { 
+            background: #1a2f4f; 
+            padding: 18px; 
+            border-radius: 10px; 
+            border: 2px solid #ffd700; 
+        }
+        .filters { 
+            margin: 20px 0; 
+            padding: 15px; 
+            background: #1a2f4f; 
+            border: 2px solid #ffd700; 
+            border-radius: 10px; 
+        }
+        label { display: block; margin: 12px 0; font-weight: bold; }
 
         @media (min-width: 768px) {
-            .main { flex-direction: row; }
-            .sidebar { max-width: 380px; }
+            .totals { grid-template-columns: repeat(3, 1fr); }
+            button { flex: 0; }
+            h1 { font-size: 3em; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>BUDGETER</h1>
-            <p>Spese di Viaggio - Disneyland 2026</p>
-        </header>
+        <h1>BUDGETER</h1>
 
-        <div class="main">
-            <div class="sidebar">
-                <h2 style="color:var(--gold); margin-bottom:12px;">➕ Nuova Spesa</h2>
-                <input type="date" id="date">
-                <input type="text" id="description" placeholder="Descrizione spesa">
-                <input type="number" id="amount" placeholder="Importo €" step="0.01">
-                <select id="person">
-                    <option value="Livio">Livio</option>
-                    <option value="Irene">Irene</option>
-                    <option value="Vale">Vale</option>
-                    <option value="Lisa">Lisa</option>
+        <nav>
+            <button onclick="showTab(0)">➕ Nuova Spesa</button>
+            <button onclick="showTab(2)">📜 Lista Spese</button>
+            <button onclick="showTab(3)">🏴‍☠️ Riepilogo</button>
+            <button onclick="showTab(4)">📊 Grafici</button>
+        </nav>
+
+        <!-- TAB 0: Aggiungi / Modifica -->
+        <div id="tab0" class="tab">
+            <h2 id="formTitle">➕ Nuova Spesa</h2>
+            <input type="hidden" id="editId">
+            
+            <input type="text" id="desc" placeholder="Descrizione della spesa">
+            
+            <select id="category">
+                <option value="">Categoria</option>
+                <option value="Benzina">⛽ Benzina / Diesel</option>
+                <option value="Alimentari">🍖 Alimentari</option>
+                <option value="Campeggio">⛺ Campeggio / Sosta</option>
+                <option value="Ristoranti">🍺 Ristoranti / Bar</option>
+                <option value="Pedaggi">🛣️ Pedaggi</option>
+                <option value="Attrazioni">🏰 Attrazioni</option>
+                <option value="Manutenzione">🔧 Manutenzione Camper</option>
+                <option value="Varie">🪙 Varie</option>
+            </select>
+            
+            <input type="number" id="amount" placeholder="Importo €" step="0.01">
+            <select id="payer">
+                <option value="Livio">Livio (Barella)</option>
+                <option value="Irene">Irene (Barella)</option>
+                <option value="Lisa">Lisa (Sforzelli)</option>
+                <option value="Valerio">Valerio (Sforzelli)</option>
+            </select>
+            
+            <input type="date" id="expenseDate">
+            
+            <label><input type="checkbox" id="split"> SPLIT</label><br><br>
+            
+            <button onclick="saveExpense()" class="btn-success" id="saveBtn">💾 Salva Spesa</button>
+            <button onclick="cancelEdit()" class="btn-danger" id="cancelBtn" style="display:none;">Annulla</button>
+        </div>
+
+        <!-- TAB 2: Lista Spese -->
+        <div id="tab2" class="tab" style="display:none;">
+            <h2>📜 Lista Spese</h2>
+            <input type="text" id="search" placeholder="Cerca spesa..." onkeyup="filterExpenses()">
+            <table id="expensesTable">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Categoria</th>
+                        <th>Descrizione</th>
+                        <th>Importo</th>
+                        <th>Chi ha pagato</th>
+                        <th>SPLIT</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- TAB 3: Riepilogo -->
+        <div id="tab3" class="tab" style="display:none;">
+            <h2>🏴‍☠️ Riepilogo Famiglie</h2>
+            <div class="totals" id="familyTotals"></div>
+        </div>
+
+        <!-- TAB 4: Grafici -->
+        <div id="tab4" class="tab" style="display:none;">
+            <h2>📊 Grafici</h2>
+            
+            <div class="filters">
+                <select id="chartCategoryFilter" onchange="updateCharts()">
+                    <option value="Tutti">Tutte le categorie</option>
+                    <option value="Benzina">⛽ Benzina</option>
+                    <option value="Alimentari">🍖 Alimentari</option>
+                    <option value="Campeggio">⛺ Campeggio</option>
+                    <option value="Ristoranti">🍺 Ristoranti</option>
+                    <option value="Pedaggi">🛣️ Pedaggi</option>
+                    <option value="Attrazioni">🏰 Attrazioni</option>
+                    <option value="Manutenzione">🔧 Manutenzione</option>
+                    <option value="Varie">🪙 Varie</option>
                 </select>
-                <label style="color:#ddd; display:block; margin:10px 0 8px;">
-                    <input type="checkbox" id="toSplit"> DA DIVIDERE tra le due famiglie
-                </label>
-                <button onclick="addExpense()">Aggiungi / Aggiorna Spesa</button>
-            </div>
-
-            <div class="content">
-                <div class="total" id="total-all">Totale: 0.00 €</div>
-                <div style="display:flex; justify-content:space-around; margin:12px 0; font-size:0.95rem;">
-                    <div>Barella: <span id="barella-total" style="color:#4CAF50;">0.00 €</span></div>
-                    <div>Sforzelli: <span id="sforzelli-total" style="color:#4CAF50;">0.00 €</span></div>
+                
+                <select id="chartPeriodFilter" onchange="toggleDateRange()">
+                    <option value="all">Tutto il viaggio</option>
+                    <option value="7">Ultimi 7 giorni</option>
+                    <option value="custom">Periodo personalizzato</option>
+                </select>
+                
+                <div id="dateRange" style="display:none; margin-top:10px;">
+                    <input type="date" id="fromDate" onchange="updateCharts()"> 
+                    <span style="color:#ffd700;">→</span> 
+                    <input type="date" id="toDate" onchange="updateCharts()">
                 </div>
-
-                <div class="filter-bar">
-                    <select id="filter-person" onchange="renderExpenses()">
-                        <option value="">Tutti</option>
-                        <option value="Livio">Livio</option>
-                        <option value="Irene">Irene</option>
-                        <option value="Vale">Vale</option>
-                        <option value="Lisa">Lisa</option>
-                    </select>
-                    <select id="filter-split" onchange="renderExpenses()">
-                        <option value="">Tutte</option>
-                        <option value="split">Da Dividere</option>
-                        <option value="nosplit">Personali</option>
-                    </select>
-                    <button onclick="clearFilters()">Reset</button>
-                </div>
-
-                <div id="expenses-list"></div>
             </div>
+            
+            <canvas id="pieChart" height="180"></canvas>
+            <canvas id="barChart" height="220"></canvas>
         </div>
     </div>
 
     <script>
+        // ==================== FIREBASE CONFIG ====================
         const firebaseConfig = {
             apiKey: "AIzaSyDIMfn30rD3EHlrQFQx6Yko_Vrimx-jAws",
             authDomain: "budgeter-75f51.firebaseapp.com",
@@ -168,145 +229,224 @@
             appId: "1:1089429460683:web:709f3443e46441e9b8ed4e"
         };
 
-        const app = firebase.initializeApp(firebaseConfig);
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const expensesRef = db.ref('expenses');
 
+        const users = [
+            { name: "Livio", family: "Barella" },
+            { name: "Irene", family: "Barella" },
+            { name: "Lisa", family: "Sforzelli" },
+            { name: "Valerio", family: "Sforzelli" }
+        ];
+
         let expenses = [];
-        const familyMap = { "Livio": "Barella", "Irene": "Barella", "Vale": "Sforzelli", "Lisa": "Sforzelli" };
+        let currentChartPie, currentChartBar;
+        let editingId = null;
 
-        // ==================== CARICAMENTO MIGLIORATO ====================
-        function loadExpenses() {
-            expensesRef.once('value').then((snapshot) => {
-                const data = snapshot.val();
-                expenses = data ? Object.values(data) : [];
-                expenses.sort((a,b) => b.date.localeCompare(a.date));
-                renderAll();
-            }).catch(err => console.error("Errore caricamento:", err));
-        }
-
-        // Ascolto in tempo reale per aggiornamenti da altri dispositivi
-        expensesRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            expenses = data ? Object.values(data) : [];
-            expenses.sort((a,b) => b.date.localeCompare(a.date));
-            renderAll();
-        });
-
-        function saveExpenses() {
-            const obj = {};
-            expenses.forEach(exp => obj[exp.id] = exp);
-            expensesRef.set(obj);
-        }
-
-        function addExpense() {
-            const description = document.getElementById('description').value.trim();
+        // ==================== SPESE ====================
+        function saveExpense() {
+            const desc = document.getElementById('desc').value.trim();
+            const category = document.getElementById('category').value;
             const amount = parseFloat(document.getElementById('amount').value);
-            const person = document.getElementById('person').value;
-            const date = document.getElementById('date').value;
-            const toSplit = document.getElementById('toSplit').checked;
+            const payer = document.getElementById('payer').value;
+            const split = document.getElementById('split').checked;
+            let date = document.getElementById('expenseDate').value;
 
-            if (!description || !amount || !date) {
-                alert("Compila tutti i campi obbligatori!");
-                return;
+            if (!desc || !category || !amount || !payer || !date) {
+                return alert("Compila tutti i campi obbligatori");
             }
 
-            const newExpense = {
-                id: Date.now().toString(),
-                date, description, amount, person, toSplit
+            const expenseData = {
+                date: date + "T12:00:00",
+                description: desc,
+                category: category,
+                amount: amount,
+                payer: payer,
+                split: split
             };
 
-            expenses.unshift(newExpense);
-            saveExpenses();
-
-            // Reset form
-            document.getElementById('description').value = '';
-            document.getElementById('amount').value = '';
-            document.getElementById('toSplit').checked = false;
-        }
-
-        function renderAll() {
-            renderExpenses();
-            renderTotals();
-        }
-
-        function renderTotals() {
-            let total = 0, barella = 0, sforzelli = 0;
-
-            expenses.forEach(exp => {
-                total += exp.amount || 0;
-                if (exp.toSplit) {
-                    const half = (exp.amount || 0) / 2;
-                    barella += half;
-                    sforzelli += half;
-                } else {
-                    familyMap[exp.person] === "Barella" ? barella += exp.amount : sforzelli += exp.amount;
-                }
-            });
-
-            document.getElementById('total-all').textContent = `Totale: ${total.toFixed(2)} €`;
-            document.getElementById('barella-total').textContent = `${barella.toFixed(2)} €`;
-            document.getElementById('sforzelli-total').textContent = `${sforzelli.toFixed(2)} €`;
-        }
-
-        function renderExpenses() {
-            const container = document.getElementById('expenses-list');
-            const personFilter = document.getElementById('filter-person').value;
-            const splitFilter = document.getElementById('filter-split').value;
-
-            let filtered = expenses;
-
-            if (personFilter) filtered = filtered.filter(e => e.person === personFilter);
-            if (splitFilter === "split") filtered = filtered.filter(e => e.toSplit);
-            if (splitFilter === "nosplit") filtered = filtered.filter(e => !e.toSplit);
-
-            container.innerHTML = filtered.map(exp => `
-                <div class="expense-item">
-                    <div style="display:flex; justify-content:space-between;">
-                        <div><strong>${exp.date} • ${exp.person}</strong><br>${exp.description}</div>
-                        <div style="text-align:right;"><strong>${(exp.amount||0).toFixed(2)} €</strong></div>
-                    </div>
-                    ${exp.toSplit ? '<span style="color:#c00;">[DA DIVIDERE]</span>' : ''}
-                    <div class="expense-actions">
-                        <button class="btn-small btn-edit" onclick="editExpense('${exp.id}')">✏️ Modifica</button>
-                        <button class="btn-small btn-delete" onclick="deleteExpense('${exp.id}')">🗑 Elimina</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function deleteExpense(id) {
-            if (confirm("Eliminare questa spesa?")) {
-                expenses = expenses.filter(exp => exp.id !== id);
-                saveExpenses();
+            if (editingId) {
+                expensesRef.child(editingId).update(expenseData);
+            } else {
+                expensesRef.push(expenseData);
             }
+
+            cancelEdit();
         }
 
         function editExpense(id) {
             const exp = expenses.find(e => e.id === id);
             if (!exp) return;
-            
-            document.getElementById('date').value = exp.date;
-            document.getElementById('description').value = exp.description;
+
+            editingId = id;
+            document.getElementById('formTitle').textContent = "Modifica Spesa";
+            document.getElementById('desc').value = exp.description;
+            document.getElementById('category').value = exp.category || "";
             document.getElementById('amount').value = exp.amount;
-            document.getElementById('person').value = exp.person;
-            document.getElementById('toSplit').checked = exp.toSplit;
+            document.getElementById('payer').value = exp.payer;
+            document.getElementById('split').checked = exp.split;
             
-            alert("Hai caricato la spesa per la modifica. Modifica i campi e premi 'Aggiungi / Aggiorna Spesa'");
+            const dateObj = new Date(exp.date);
+            document.getElementById('expenseDate').value = dateObj.toISOString().split('T')[0];
+
+            document.getElementById('saveBtn').textContent = "Salva Modifiche";
+            document.getElementById('cancelBtn').style.display = 'inline-block';
+            showTab(0);
         }
 
-        function clearFilters() {
-            document.getElementById('filter-person').value = '';
-            document.getElementById('filter-split').value = '';
-            renderExpenses();
+        function cancelEdit() {
+            editingId = null;
+            document.getElementById('formTitle').textContent = "➕ Nuova Spesa";
+            document.getElementById('desc').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('category').value = '';
+            document.getElementById('split').checked = false;
+            document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('saveBtn').textContent = "💾 Salva Spesa";
+            document.getElementById('cancelBtn').style.display = 'none';
         }
 
-        // Imposta data odierna
-        document.getElementById('date').valueAsDate = new Date();
+        function deleteExpense(id) {
+            if (confirm("Eliminare questa spesa?")) {
+                expensesRef.child(id).remove();
+            }
+        }
 
-        // Caricamento iniziale
+        function loadExpenses() {
+            expensesRef.on('value', snapshot => {
+                expenses = [];
+                const tbody = document.querySelector('#expensesTable tbody');
+                tbody.innerHTML = '';
+
+                snapshot.forEach(child => {
+                    const exp = child.val();
+                    exp.id = child.key;
+                    expenses.push(exp);
+
+                    const row = document.createElement('tr');
+                    if (exp.split) row.classList.add('split-yes');
+                    
+                    row.innerHTML = `
+                        <td>${new Date(exp.date).toLocaleDateString('it-IT')}</td>
+                        <td><strong>${exp.category || '—'}</strong></td>
+                        <td>${exp.description}</td>
+                        <td>€ ${exp.amount.toFixed(2)}</td>
+                        <td>${exp.payer}</td>
+                        <td>${exp.split ? '✅ Sì' : '❌ No'}</td>
+                        <td>
+                            <button onclick="editExpense('${exp.id}')" class="btn-warning">Modifica</button>
+                            <button onclick="deleteExpense('${exp.id}')" class="btn-danger">Elimina</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                updateAll();
+            });
+        }
+
+        function filterExpenses() {
+            const term = document.getElementById('search').value.toLowerCase();
+            const rows = document.querySelectorAll('#expensesTable tbody tr');
+            rows.forEach(row => row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none');
+        }
+
+        // ==================== FILTRI GRAFICI ====================
+        function toggleDateRange() {
+            const period = document.getElementById('chartPeriodFilter').value;
+            document.getElementById('dateRange').style.display = (period === "custom") ? "block" : "none";
+            updateCharts();
+        }
+
+        function getFilteredExpenses() {
+            const categoryFilter = document.getElementById('chartCategoryFilter').value;
+            const periodFilter = document.getElementById('chartPeriodFilter').value;
+            let filtered = expenses;
+
+            if (categoryFilter !== "Tutti") {
+                filtered = filtered.filter(exp => exp.category === categoryFilter);
+            }
+
+            if (periodFilter === "7") {
+                const limit = new Date(Date.now() - 7*24*60*60*1000);
+                filtered = filtered.filter(exp => new Date(exp.date) >= limit);
+            } else if (periodFilter === "custom") {
+                const from = document.getElementById('fromDate').value;
+                const to = document.getElementById('toDate').value;
+                if (from) filtered = filtered.filter(exp => new Date(exp.date) >= new Date(from));
+                if (to) {
+                    const toDate = new Date(to);
+                    toDate.setHours(23,59,59);
+                    filtered = filtered.filter(exp => new Date(exp.date) <= toDate);
+                }
+            }
+            return filtered;
+        }
+
+        function calculateFamilyTotals(filteredExpenses) {
+            let barellaTotal = 0, sforzelliTotal = 0, sharedTotal = 0;
+
+            filteredExpenses.forEach(exp => {
+                const payerUser = users.find(u => u.name === exp.payer);
+                if (!payerUser) return;
+                if (exp.split) sharedTotal += exp.amount;
+                else if (payerUser.family === "Barella") barellaTotal += exp.amount;
+                else sforzelliTotal += exp.amount;
+            });
+
+            const sharedPerFamily = sharedTotal / 2;
+            return {
+                barellaShouldPay: barellaTotal + sharedPerFamily,
+                sforzelliShouldPay: sforzelliTotal + sharedPerFamily,
+                sharedTotal
+            };
+        }
+
+        function updateCharts() {
+            const filtered = getFilteredExpenses();
+            const totals = calculateFamilyTotals(filtered);
+
+            if (currentChartPie) currentChartPie.destroy();
+            if (currentChartBar) currentChartBar.destroy();
+
+            currentChartPie = new Chart(document.getElementById('pieChart'), {
+                type: 'pie',
+                data: {
+                    labels: ['Barella', 'Sforzelli'],
+                    datasets: [{ data: [totals.barellaShouldPay, totals.sforzelliShouldPay], backgroundColor: ['#3498db', '#e74c3c'] }]
+                }
+            });
+
+            currentChartBar = new Chart(document.getElementById('barChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Barella', 'Sforzelli', 'Condivise'],
+                    datasets: [{
+                        label: 'Importo €',
+                        data: [totals.barellaShouldPay, totals.sforzelliShouldPay, totals.sharedTotal],
+                        backgroundColor: ['#3498db', '#e74c3c', '#ffd700']
+                    }]
+                }
+            });
+        }
+
+        function updateAll() { updateCharts(); }
+
+        function showTab(n) {
+            document.querySelectorAll('.tab').forEach(tab => tab.style.display = 'none');
+            document.getElementById(`tab${n}`).style.display = 'block';
+            if (n === 3 || n === 4) updateAll();
+        }
+
+        // ==================== INIT ====================
         window.onload = () => {
+            document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('fromDate').value = new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0];
+            document.getElementById('toDate').value = new Date().toISOString().split('T')[0];
+            
             loadExpenses();
+            showTab(0);
         };
     </script>
 </body>
