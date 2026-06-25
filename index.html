@@ -30,8 +30,9 @@
         input, select { padding: 12px; margin: 8px 0; width: 100%; border-radius: 6px; border: 2px solid #ffd700; background: #1a2f4f; color: #f4e8c1; font-size: 1rem; }
         table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #0f1f33; font-size: 0.95rem; }
         th, td { border: 1px solid #ffd700; padding: 10px; text-align: left; }
-        th { background: #8b0000; color: #ffd700; cursor: pointer; user-select: none; }
+        th { background: #8b0000; color: #ffd700; cursor: pointer; user-select: none; position: relative; }
         th:hover { background: #a52a2a; }
+        th .sort-indicator { margin-left: 5px; font-size: 0.9em; }
         .split-yes { background: #003300; }
         .totals { display: grid; grid-template-columns: 1fr; gap: 15px; margin: 25px 0; }
         .card { background: #1a2f4f; padding: 18px; border-radius: 10px; border: 2px solid #ffd700; }
@@ -43,7 +44,6 @@
             background: none; 
             border: none; 
             cursor: pointer; 
-            display: inline-block;
         }
         .actions { white-space: nowrap; }
         .center-split { text-align: center; margin: 15px 0; font-size: 1.1em; }
@@ -61,7 +61,7 @@
 
         <div id="status" class="status"></div>
 
-        <!-- TAB 0: Nuova Spesa -->
+        <!-- TAB 0 -->
         <div id="tab0" class="tab">
             <h2 id="formTitle">➕ Nuova Spesa</h2>
             <input type="hidden" id="editId">
@@ -103,10 +103,10 @@
             <table id="expensesTable">
                 <thead>
                     <tr>
-                        <th onclick="sortTable(0)">Data ↕</th>
+                        <th onclick="sortTable(0)">Data <span class="sort-indicator" id="sort0"></span></th>
                         <th onclick="filterByCategory()">Categoria</th>
                         <th onclick="sortTable(2)">Descrizione</th>
-                        <th onclick="sortTable(3)">Importo ↕</th>
+                        <th onclick="sortTable(3)">Importo <span class="sort-indicator" id="sort3"></span></th>
                         <th>Spesi da</th>
                         <th onclick="toggleSplitFilter()">SPLIT</th>
                         <th>Azioni</th>
@@ -139,9 +139,10 @@
 
         let expenses = [];
         let editingId = null;
-        let currentSort = { col: -1, asc: true };
+        let sortColumn = -1;
+        let sortAsc = true;
         let categoryFilter = null;
-        let splitFilter = null; // null = tutti, true = solo split, false = solo non split
+        let splitFilter = null;
 
         const users = [
             { name: "Livio", family: "Barella" },
@@ -157,7 +158,7 @@
             setTimeout(() => el.textContent = "", 5000);
         }
 
-        function saveExpense() { /* stessa funzione di prima */ 
+        function saveExpense() {
             const desc = document.getElementById('desc').value.trim();
             const category = document.getElementById('category').value;
             const amount = parseFloat(document.getElementById('amount').value);
@@ -194,17 +195,28 @@
             const tbody = document.querySelector('#expensesTable tbody');
             tbody.innerHTML = '';
 
-            let filteredExpenses = expenses;
+            let filtered = expenses.filter(exp => {
+                if (categoryFilter && exp.category !== categoryFilter) return false;
+                if (splitFilter !== null && exp.split !== splitFilter) return false;
+                return true;
+            });
 
-            // Applica filtri
-            if (categoryFilter) {
-                filteredExpenses = filteredExpenses.filter(e => e.category === categoryFilter);
-            }
-            if (splitFilter !== null) {
-                filteredExpenses = filteredExpenses.filter(e => e.split === splitFilter);
+            // Ordinamento
+            if (sortColumn !== -1) {
+                filtered.sort((a, b) => {
+                    let valA, valB;
+                    if (sortColumn === 0) { // Data
+                        valA = new Date(a.date);
+                        valB = new Date(b.date);
+                    } else if (sortColumn === 3) { // Importo
+                        valA = a.amount;
+                        valB = b.amount;
+                    }
+                    return sortAsc ? (valA - valB) : (valB - valA);
+                });
             }
 
-            filteredExpenses.forEach(exp => {
+            filtered.forEach(exp => {
                 const row = document.createElement('tr');
                 if (exp.split) row.classList.add('split-yes');
                 row.innerHTML = `
@@ -223,7 +235,46 @@
             });
         }
 
-        function editExpense(id) { /* stessa funzione */ 
+        function sortTable(col) {
+            if (sortColumn === col) {
+                sortAsc = !sortAsc;
+            } else {
+                sortColumn = col;
+                sortAsc = true;
+            }
+
+            // Aggiorna indicatori
+            document.querySelectorAll('.sort-indicator').forEach(el => el.textContent = '');
+            const indicator = document.getElementById(`sort${col}`);
+            if (indicator) indicator.textContent = sortAsc ? '↑' : '↓';
+
+            renderTable();
+        }
+
+        function filterByCategory() {
+            const cats = [...new Set(expenses.map(e => e.category))];
+            let text = "Seleziona categoria:\n0 → Tutte\n";
+            cats.forEach((c, i) => text += `${i+1} → ${c}\n`);
+            
+            const input = prompt(text);
+            if (input === null) return;
+            
+            categoryFilter = (input === "0") ? null : cats[parseInt(input)-1];
+            renderTable();
+        }
+
+        function toggleSplitFilter() {
+            if (splitFilter === null) splitFilter = true;
+            else if (splitFilter === true) splitFilter = false;
+            else splitFilter = null;
+            renderTable();
+        }
+
+        function applyFilters() {
+            renderTable();
+        }
+
+        function editExpense(id) {
             const exp = expenses.find(e => e.id === id);
             if (!exp) return;
             editingId = id;
@@ -240,7 +291,7 @@
             showTab(0);
         }
 
-        function cancelEdit() { /* stessa */ 
+        function cancelEdit() {
             editingId = null;
             document.getElementById('formTitle').textContent = "➕ Nuova Spesa";
             document.getElementById('desc').value = '';
@@ -253,39 +304,12 @@
         }
 
         function deleteExpense(id) {
-            if (confirm("Eliminare definitivamente questa spesa?")) {
+            if (confirm("Eliminare questa spesa?")) {
                 expensesRef.child(id).remove().then(() => showStatus("✅ Spesa eliminata"));
             }
         }
 
-        // ==================== FILTRI ====================
-        function filterByCategory() {
-            const categories = [...new Set(expenses.map(e => e.category))];
-            let msg = "Filtra per categoria:\n0 = Tutti\n";
-            categories.forEach((cat, i) => msg += `${i+1} = ${cat}\n`);
-            const choice = prompt(msg);
-            if (choice === null) return;
-            categoryFilter = (choice === "0") ? null : categories[parseInt(choice)-1];
-            renderTable();
-        }
-
-        function toggleSplitFilter() {
-            if (splitFilter === null) splitFilter = true;
-            else if (splitFilter === true) splitFilter = false;
-            else splitFilter = null;
-            renderTable();
-        }
-
-        function applyFilters() {
-            renderTable();
-        }
-
-        function sortTable(colIndex) { /* stessa logica di prima */ 
-            // ... (puoi riutilizzare la funzione precedente se vuoi)
-            renderTable(); // per semplicità al momento non implemento sort completo
-        }
-
-        function updateSummary() { /* stessa */ 
+        function updateSummary() {
             let barellaDirect = 0, sforzelliDirect = 0, shared = 0;
             expenses.forEach(exp => {
                 const user = users.find(u => u.name === exp.payer);
